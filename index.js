@@ -26,16 +26,54 @@ const app = express()
 app.use(express.json())
 
 //ruta registro
-app.get('/usuarios',(req,res)=>{
-    const users = collection(db,'users')
-    let data = getDocs()
-    res.json({
-        'alert':'success',
-        data
+app.get('/usuarios', async(req, res) =>{
+   const colRef = collection(db,'users')
+   const docsSnap = await getDoc(colRef)
+  let data = []
+   docsSnap.forEach(doc=>{
+   data.push(doc.data())
+     })
+res.json({
+   'alert':'Success',
+   data
+   })
+  })
+
+app.post('/login',(req,res) =>{
+  let { email,passwped} = req.body
+
+  if (!email.length|| !password.length){
+    returnres.json({
+      'alert':'no se han recibido los datos correctamente'
     })
+  }
+
+  const users =collection(db,'users')
+  getDoc(doc(user,email))
+  .then(user =>{
+    if(!user.exists)
+    {
+      return res.json({
+        'alert':'correo no registrado'
+      })
+    } else{
+      bcrypt.compare(password, user.data().password,(error,result) =>{
+        let data = user.data()
+        if(result)
+        {
+          res.json({
+            'alert':'Seccess',
+          name:data.name,
+          email:data.email
+          })
+        }else{
+          return
+        }
+      })
+    }
+  })
 })
-//ejecutamos el servidor
-const PORT = process.env.PORT || 19000
+
 
 // Rutas para las peticiones EndPoint | API
 app.post('/registro', (req, res) => {
@@ -89,9 +127,10 @@ app.post('/registro', (req, res) => {
   }
 })
 
+//ejecutamos el servidor
+const PORT = process.env.PORT || 19000
 
 // Ejecutamos el servidor
 app.listen(PORT, () => {
     console.log(`Escuchando en el puerto: ${PORT}`)
 })
-    
