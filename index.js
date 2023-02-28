@@ -127,6 +127,62 @@ app.post('/registro', (req, res) => {
   }
 })
 
+// ruta para borrar 
+app.post('/delete',(req,res) =>{
+  let {id} = req.body
+  deleteDoc(doc(collection(db,'users'), id))
+
+  .then((Response) =>{
+    res.json({
+      'alert':'success'
+    })
+  })
+  .catch((error) =>{
+    res.json({
+      'alert':error
+    })
+  })
+})
+//
+
+
+  app.post('/update', (req, res) => {
+    const { id,name, lastname,number } = req.body
+  
+    // Validaciones de los datos
+    if(name.length < 3){
+      res.json({
+        'alert': 'nombre requiere mínimo 3 caracteres'
+      })
+    }else if(lastname.length < 3){
+      res.json({
+        'alert': 'apellido requiere mínimo 3 caracteres'
+      })
+    } else if (!Number(number) || number.length < 10) {
+      res.json({
+        'alert': 'Introduce un número telefónico correcto'
+      })
+    } else {
+      db.collection('users').doc(id)
+      const updateData ={
+        name,
+        lastname,
+        number
+      }
+  updateDoc(doc(db,'users'), updateData,id)
+
+  .then((Response) =>{
+    res.json({
+      'alert':'success'
+    })
+  })
+  .catch((error) =>{
+    res.json({
+      'alert':error
+    })
+  })
+}
+})
 //ejecutamos el servidor
 const PORT = process.env.PORT || 19000
 
