@@ -1,10 +1,10 @@
-
-
 const express = require('express')
 const bcrypt = require('bcrypt')
 const {initializeApp} = require('firebase/app')
-const {getFirestore, collection, getDoc,doc ,setDoc} = require('firebase/firestore')
+const {getFirestore, collection, getDoc, doc, setDoc, getDocs, deleteDoc, updateDoc} = require('firebase/firestore')
+const cors = require('cors')
 require('dotenv/config')
+
 
 // Configuración de Firebase
 const firebaseConfig = {
@@ -23,56 +23,14 @@ const db = getFirestore()
 
 // Inicializar el servidor
 const app = express()
+
+const corsOptions = {
+  "origin": "*",
+  "optionsSucessStatus": 200
+}
+
 app.use(express.json())
-
-//ruta registro
-app.get('/usuarios', async(req, res) =>{
-   const colRef = collection(db,'users')
-   const docsSnap = await getDoc(colRef)
-  let data = []
-   docsSnap.forEach(doc=>{
-   data.push(doc.data())
-     })
-res.json({
-   'alert':'Success',
-   data
-   })
-  })
-
-app.post('/login',(req,res) =>{
-  let { email,passwped} = req.body
-
-  if (!email.length|| !password.length){
-    returnres.json({
-      'alert':'no se han recibido los datos correctamente'
-    })
-  }
-
-  const users =collection(db,'users')
-  getDoc(doc(user,email))
-  .then(user =>{
-    if(!user.exists)
-    {
-      return res.json({
-        'alert':'correo no registrado'
-      })
-    } else{
-      bcrypt.compare(password, user.data().password,(error,result) =>{
-        let data = user.data()
-        if(result)
-        {
-          res.json({
-            'alert':'Seccess',
-          name:data.name,
-          email:data.email
-          })
-        }else{
-          return
-        }
-      })
-    }
-  })
-})
+app.use(cors(corsOptions))
 
 
 // Rutas para las peticiones EndPoint | API
@@ -84,17 +42,17 @@ app.post('/registro', (req, res) => {
     res.json({
       'alert': 'nombre requiere mínimo 3 caracteres'
     })
-  }else if(lastname.length < 3){
+  }else if (lastname.length < 3) {
     res.json({
       'alert': 'apellido requiere mínimo 3 caracteres'
-    })
-  }else if (!email.length) {
+    }) 
+  } else if (!email.length) {
     res.json({
       'alert': 'debes escribir correo electrónico'
     })
   } else if (password.length < 8) {
     res.json({
-      'alert': 'contra requiere mínimo 8 caracteres'
+      'alert': 'La contraseña requiere mínimo 8 caracteres'
     })
   } else if (!Number(number) || number.length < 10) {
     res.json({
@@ -115,9 +73,10 @@ app.post('/registro', (req, res) => {
             req.body.password = hash
 
             // Guardar en la base de datos
-            setDoc(doc(users, email), req.body).then(() => {
+            setDoc(doc(users, email), req.body).then(reg => {
               res.json({
-                'alert': 'Success!!',
+                message: 'realizado',
+                'alert': 'Success!!'
               })
             })
           })
@@ -127,63 +86,110 @@ app.post('/registro', (req, res) => {
   }
 })
 
-// ruta para borrar 
-app.post('/delete',(req,res) =>{
-  let {id} = req.body
-  deleteDoc(doc(collection(db,'users'), id))
-
-  .then((Response) =>{
-    res.json({
-      'alert':'success'
-    })
+app.get('/usuarios', async (req, res) => {
+  const colRef = collection(db, 'users')
+  const docsSnap = await getDocs(colRef)
+  let data = []
+  docsSnap.forEach(doc => {
+    data.push(doc.data())
   })
-  .catch((error) =>{
-    res.json({
-      'alert':error
-    })
+  res.json({
+    message: "Usuarios",
+    'alert': 'Success!!',
+    data
   })
 })
-//
 
+app.post('/login', (req, res) => {
+  let {email, password} = req.body
 
-  app.post('/update', (req, res) => {
-    const { id,name, lastname,number } = req.body
-  
-    // Validaciones de los datos
-    if(name.length < 3){
-      res.json({
-        'alert': 'nombre requiere mínimo 3 caracteres'
-      })
-    }else if(lastname.length < 3){
-      res.json({
-        'alert': 'apellido requiere mínimo 3 caracteres'
-      })
-    } else if (!Number(number) || number.length < 10) {
-      res.json({
-        'alert': 'Introduce un número telefónico correcto'
+  if(!email.length || !password.length){
+    res.json({
+      'alert': 'No se han recibido los datos correctamente'
+    })
+  }
+
+  const users = collection(db, 'users')
+  getDoc(doc(users, email))
+  .then(user => {
+    if(!user.exists()){
+      return res.json({
+        'alert': 'Correo no registrado en la base de datos'
       })
     } else {
-      db.collection('users').doc(id)
-      const updateData ={
-        name,
-        lastname,
-        number
-      }
-  updateDoc(doc(db,'users'), updateData,id)
-
-  .then((Response) =>{
-    res.json({
-      'alert':'success'
-    })
+      bcrypt.compare(password, user.data().password, (error, result) => {
+        if (result) {
+          let data = user.data()
+          res.json({
+            'alert': 'Success!!',
+            name: data.name,
+            email: data.email
+          })
+        } else {
+          return res.json({
+            'alert': 'Contraseña incorrecta'
+          })
+        }
+      })
+    }
   })
-  .catch((error) =>{
-    res.json({
-      'alert':error
-    })
-  })
-}
 })
-//ejecutamos el servidor
+
+app.post('/delete', (req, res) => {
+  let { email } = req.body
+
+  deleteDoc(doc(collection(db, 'users'), email))
+  .then((response) => {
+    res.json({
+      message: 'Usuario Borrado',
+      'alert': 'Success!!'
+    })
+  })
+  .catch((error) => {
+    res.json({
+      'alert': error
+    })
+  })
+})
+
+app.post('/update', (req, res) => {
+  const { name, lastname, email, number } = req.body
+
+  if(name.length < 3){
+    res.json({
+      'alert': 'nombre requiere mínimo 3 caracteres'
+    })
+  }else if (lastname.length < 3) {
+    res.json({
+      'alert': 'apellido requiere mínimo 3 caracteres'
+    }) 
+  } else if (!Number(number) || number.length < 10) {
+    res.json({
+      'alert': 'Introduce un número telefónico correcto'
+    })
+  } else {
+    // db.collection('users').doc('email')
+    const pedro = collection(db, 'users')
+    const updateData = {
+      name,
+      lastname,
+      number
+    }
+    updateDoc(doc(pedro, email), updateData, email)
+    .then((response) => {
+      res.json({
+        message: 'actualizado',
+        'alert': 'Success!!'
+      })
+    })
+    .catch((error) => {
+      res.json({
+        'alert': error
+      })
+    })
+  }
+})
+
 const PORT = process.env.PORT || 19000
 
 // Ejecutamos el servidor
