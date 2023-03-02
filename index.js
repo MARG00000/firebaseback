@@ -14,7 +14,7 @@ const firebaseConfig = {
     storageBucket: "backfirebase-78c56.appspot.com",
     messagingSenderId: "113329125484",
     appId: "1:113329125484:web:bb39c48bca636bc832c049"
-  };
+};
   
 
 // Inicializar BD con Firebase
@@ -75,8 +75,7 @@ app.post('/registro', (req, res) => {
             // Guardar en la base de datos
             setDoc(doc(users, email), req.body).then(reg => {
               res.json({
-                message: 'realizado',
-                'alert': 'Success!!'
+                'alert': 'Seccess'
               })
             })
           })
@@ -121,7 +120,7 @@ app.post('/login', (req, res) => {
         if (result) {
           let data = user.data()
           res.json({
-            'alert': 'Success!!',
+            'alert': 'Seccess',
             name: data.name,
             email: data.email
           })
@@ -142,7 +141,7 @@ app.post('/delete', (req, res) => {
   .then((response) => {
     res.json({
       message: 'Usuario Borrado',
-      'alert': 'Success!!'
+      'alert': 'Seccess'
     })
   })
   .catch((error) => {
@@ -168,18 +167,17 @@ app.post('/update', (req, res) => {
       'alert': 'Introduce un número telefónico correcto'
     })
   } else {
-    // db.collection('users').doc('email')
-    const pedro = collection(db, 'users')
+    const usuarioActu = collection(db, 'users')
     const updateData = {
       name,
       lastname,
       number
     }
-    updateDoc(doc(pedro, email), updateData, email)
+    updateDoc(doc(usuarioActu, email), updateData, email)
     .then((response) => {
       res.json({
-        message: 'actualizado',
-        'alert': 'Success!!'
+        message: 'usuario actualizado',
+        'alert': 'Seccess'
       })
     })
     .catch((error) => {
